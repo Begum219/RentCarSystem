@@ -95,5 +95,62 @@ namespace RentCarSystem.Application.Services
 
             return true;
         }
+
+        public async Task<UserDTO> GetUserByPublicIdAsync(Guid publicId)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.PublicId == publicId);
+
+            return _mapper.Map<UserDTO>(user);
+        }
+
+        public async Task<UserDTO> UpdateUserByPublicIdAsync(Guid publicId, UpdateUserDTO dto)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.PublicId == publicId);
+
+            if (user == null)
+                throw new Exception("Kullanıcı bulunamadı");
+
+            // Update properties
+            user.FirstName = dto.FirstName;
+            user.LastName = dto.LastName;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<UserDTO>(user);
+        }
+
+        public async Task<bool> DeleteUserByPublicIdAsync(Guid publicId)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.PublicId == publicId);
+
+            if (user == null)
+                return false;
+
+            user.IsActive = false;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ToggleUserActiveStatusAsync(Guid publicId)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.PublicId == publicId);
+
+            if (user == null)
+                return false;
+
+            user.IsActive = !user.IsActive;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

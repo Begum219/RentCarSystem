@@ -8,6 +8,8 @@ namespace RentCarSystem.Domain.Entities
         
         public int BrandId { get; set; }
         public int CategoryId { get; set; }
+        
+        
         public string Model { get; set; } = string.Empty;
         public int Year { get; set; }
         public string PlateNumber { get; set; } = string.Empty;

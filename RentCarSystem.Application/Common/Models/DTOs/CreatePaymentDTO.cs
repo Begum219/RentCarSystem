@@ -21,5 +21,6 @@ namespace RentCarSystem.Application.Common.Models.DTOs
         public int PaymentType { get; set; }  // enumda tanımladık
         [StringLength(100)]
         public string? TransactionId { get; set; }
+        public int Status { get; set; } = 2;
     }
 }

@@ -5,6 +5,7 @@ namespace RentCarSystem.Domain.Entities
     public class RentalAgreement : BaseAuditableEntity
     {
         public int ReservationId { get; set; }
+       
         public string ContractNumber { get; set; } = string.Empty;
 
         // Teslim Alma Bilgileri

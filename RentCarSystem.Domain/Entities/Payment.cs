@@ -6,6 +6,7 @@ namespace RentCarSystem.Domain.Entities
     public class Payment : BaseAuditableEntity
     {
         public int ReservationId { get; set; }
+        public Guid PublicId { get; set; } = Guid.NewGuid();
         public decimal Amount { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
         public PaymentType PaymentType { get; set; }

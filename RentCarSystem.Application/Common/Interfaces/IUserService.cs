@@ -18,6 +18,10 @@ namespace RentCarSystem.Application.Common.Interfaces
         Task<UserDTO> CreateUserAsync(UpdateUserDTO dto);      // CreateUserAsync (TEKİL)
         Task<UserDTO> UpdateUserAsync(int id, UpdateUserDTO dto);  // UpdateUserAsync (TEKİL)
         Task<bool> DeleteUserAsync(int id);
+        Task<UserDTO> GetUserByPublicIdAsync(Guid publicId);
+        Task<UserDTO> UpdateUserByPublicIdAsync(Guid publicId, UpdateUserDTO dto);
+        Task<bool> DeleteUserByPublicIdAsync(Guid publicId);
+        Task<bool> ToggleUserActiveStatusAsync(Guid publicId);
 
 
     }

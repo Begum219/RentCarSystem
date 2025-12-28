@@ -5,6 +5,7 @@ namespace RentCarSystem.Domain.Entities
     public class Maintenance : BaseAuditableEntity
     {
         public int VehicleId { get; set; }
+        
         public string MaintenanceType { get; set; } = string.Empty; // Periyodik, Onarım, Lastik, Boya
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }

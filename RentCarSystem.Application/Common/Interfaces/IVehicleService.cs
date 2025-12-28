@@ -15,5 +15,8 @@ namespace RentCarSystem.Application.Common.Interfaces
         Task<VehicleDTO> CreateVehicleAsync(CreateVehicleDTO dto);  //Create
         Task<VehicleDTO> UpdateVehicleAsync(int id, CreateVehicleDTO dto);  //update
         Task<bool> DeleteVehicleAsync(int id); // delete kısmı
+        Task<dynamic> SearchVehiclesAsync(string query);
+        Task<PaginatedResult<VehicleDTO>> GetVehiclesPaginatedAsync(int pageNumber, int pageSize);
+        Task<PaginatedResult<VehicleDTO>> GetFilteredVehiclesAsync(FilterVehiclesDTO filter);
     }
 }

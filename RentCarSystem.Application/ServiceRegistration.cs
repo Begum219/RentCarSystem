@@ -2,6 +2,10 @@
 using RentCarSystem.Application.Common.Interfaces;
 using RentCarSystem.Application.Services;
 using System.Reflection;
+using RentCarSystem.Application.FraudDetection;
+using RentCarSystem.Application.BackgroundJobs;
+using RentCarSystem.Infrastructure.Services;
+using RentCarSystem.Application.Orchestrators;
 
 namespace RentCarSystem.Application
 {
@@ -30,6 +34,14 @@ namespace RentCarSystem.Application
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITwoFactorService, TwoFactorService>();
+            services.AddScoped<IFraudDetectionService, FraudDetectionService>();
+            services.AddScoped<IEmailService , EmailService>();
+            services.AddScoped<IBackgroundJobService, BackgroundJobService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IPaymentGatewayService, IyzicoPaymentGatewayService>();
+            services.AddScoped<ReservationOrchestrator>();
+
+            //services.AddScoped<IPaymentGatewayService, MockPaymentGatewayService>();
 
             return services;
         }

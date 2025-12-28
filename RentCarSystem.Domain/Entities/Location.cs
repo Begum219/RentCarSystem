@@ -11,6 +11,7 @@ namespace RentCarSystem.Domain.Entities
     {
         public string Name { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
+       
         public string City { get; set; } = string.Empty;
         public string? District { get; set; }
         public decimal? Latitude { get; set; }

@@ -9,12 +9,13 @@ namespace RentCarSystem.Domain.Entities
 {
     public class User :  BaseAuditableEntity
     {
+        
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; }= string.Empty;
         public string Email { get; set; }= string.Empty;
         public string PhoneNumber {  get; set; }= string.Empty; 
         public string PasswordHash { get; set; } = string.Empty;
-
+        public Guid PublicId { get; set; } = Guid.NewGuid();
         //sürücü bilgileri
         public string? DriverLicenseNumber {  get; set; }
         public DateTime? DriverLicenseIssueDate { get; set; }

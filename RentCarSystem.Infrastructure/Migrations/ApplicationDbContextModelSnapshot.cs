@@ -389,6 +389,11 @@ namespace RentCarSystem.Infrastructure.Migrations
                     b.Property<int>("PaymentType")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("PublicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
+
                     b.Property<int>("ReservationId")
                         .HasColumnType("int");
 
@@ -410,9 +415,79 @@ namespace RentCarSystem.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PublicId")
+                        .IsUnique();
+
                     b.HasIndex("ReservationId");
 
                     b.ToTable("Payments", (string)null);
+                });
+
+            modelBuilder.Entity("RentCarSystem.Domain.Entities.PaymentRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsSuccessful")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestBody")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ResponseBody")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentRequests_IdempotencyKey");
+
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentRequests", (string)null);
                 });
 
             modelBuilder.Entity("RentCarSystem.Domain.Entities.RentalAgreement", b =>
@@ -572,6 +647,11 @@ namespace RentCarSystem.Infrastructure.Migrations
                     b.Property<TimeSpan>("PickupTime")
                         .HasColumnType("time");
 
+                    b.Property<Guid>("PublicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
+
                     b.Property<DateTime>("ReturnDate")
                         .HasColumnType("datetime2");
 
@@ -615,6 +695,9 @@ namespace RentCarSystem.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PickupLocationId");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique();
 
                     b.HasIndex("ReturnLocationId");
 
@@ -771,6 +854,11 @@ namespace RentCarSystem.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<Guid>("PublicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
+
                     b.Property<string>("RefreshToken")
                         .HasColumnType("nvarchar(max)");
 
@@ -803,6 +891,9 @@ namespace RentCarSystem.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("PublicId")
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
@@ -1036,6 +1127,24 @@ namespace RentCarSystem.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Reservation");
+                });
+
+            modelBuilder.Entity("RentCarSystem.Domain.Entities.PaymentRequest", b =>
+                {
+                    b.HasOne("RentCarSystem.Domain.Entities.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RentCarSystem.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RentCarSystem.Domain.Entities.RentalAgreement", b =>

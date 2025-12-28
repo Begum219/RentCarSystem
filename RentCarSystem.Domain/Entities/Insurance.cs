@@ -5,6 +5,7 @@ namespace RentCarSystem.Domain.Entities
     public class Insurance : BaseAuditableEntity
     {
         public int VehicleId { get; set; }
+      
         public string PolicyNumber { get; set; } = string.Empty;
         public string Provider { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }

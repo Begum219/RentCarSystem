@@ -17,13 +17,35 @@ namespace RentCarSystem.API.Controllers
         }
 
         /// <summary>
-        /// Tüm araçları listeler
+        /// Araçları filtreleme ve sayfalandırma ile listeler
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<List<VehicleDTO>>> GetAll()
+        public async Task<ActionResult<PaginatedResult<VehicleDTO>>> GetVehicles(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? query = null,
+            [FromQuery] int? brandId = null,
+            [FromQuery] int? categoryId = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] string? color = null,
+            [FromQuery] string? status = null)
         {
-            var vehicles = await _vehicleService.GetAllVehiclesAsync();
-            return Ok(vehicles);
+            var filter = new FilterVehiclesDTO
+            {
+                PageNumber = page,
+                PageSize = pageSize,
+                SearchTerm = query,
+                BrandId = brandId,
+                CategoryId = categoryId,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                Color = color,
+                Status = status
+            };
+
+            var result = await _vehicleService.GetFilteredVehiclesAsync(filter);
+            return Ok(result);
         }
 
         /// <summary>
@@ -105,6 +127,16 @@ namespace RentCarSystem.API.Controllers
                 return NotFound(new { message = $"Vehicle with id {id} not found" });
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Elasticsearch ile araç ara
+        /// </summary>
+        [HttpGet("search-elasticsearch")]
+        public async Task<IActionResult> SearchVehicles([FromQuery] string query)
+        {
+            var result = await _vehicleService.SearchVehiclesAsync(query);
+            return Ok(result);
         }
     }
 }

@@ -5,6 +5,7 @@ using RentCarSystem.Application.Common.Models.DTOs;
 using RentCarSystem.Domain.Entities;
 using RentCarSystem.Domain.Enums;
 using RentCarSystem.Infrastructure.Context;
+using Serilog;
 
 namespace RentCarSystem.Application.Services
 {
@@ -19,15 +20,19 @@ namespace RentCarSystem.Application.Services
             _mapper = mapper;
         }
 
+        // ========== INT ID İLE METODLAR (Mevcut) ==========
+
         public async Task<List<ReservationDTO>> GetAllReservationsAsync()
         {
-            var reservations = await _context.Reservations 
+            var reservations = await _context.Reservations
                 .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
                 .Include(r => r.PickupLocation)
                 .Include(r => r.ReturnLocation)
+                .Include(r => r.User)
                 .ToListAsync();
 
-            return _mapper.Map<List<ReservationDTO>>(reservations);  
+            return _mapper.Map<List<ReservationDTO>>(reservations);
         }
 
         public async Task<ReservationDTO?> GetReservationByIdAsync(int id)
@@ -35,12 +40,13 @@ namespace RentCarSystem.Application.Services
             var reservation = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
                 .Include(r => r.PickupLocation)
                 .Include(r => r.ReturnLocation)
                 .Where(r => r.Id == id)
                 .FirstOrDefaultAsync();
 
-            return _mapper.Map<ReservationDTO>(reservation);  
+            return _mapper.Map<ReservationDTO>(reservation);
         }
 
         public async Task<List<ReservationDTO>> GetReservationsByUserAsync(int userId)
@@ -48,12 +54,14 @@ namespace RentCarSystem.Application.Services
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
                 .Include(r => r.PickupLocation)
                 .Include(r => r.ReturnLocation)
                 .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
-            return _mapper.Map<List<ReservationDTO>>(reservations); 
+            return _mapper.Map<List<ReservationDTO>>(reservations);
         }
 
         public async Task<List<ReservationDTO>> GetReservationsByVehicleAsync(int vehicleId)
@@ -61,12 +69,14 @@ namespace RentCarSystem.Application.Services
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
                 .Include(r => r.PickupLocation)
                 .Include(r => r.ReturnLocation)
                 .Where(r => r.VehicleId == vehicleId)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
-            return _mapper.Map<List<ReservationDTO>>(reservations);  
+            return _mapper.Map<List<ReservationDTO>>(reservations);
         }
 
         public async Task<List<ReservationDTO>> GetActiveReservationsAsync()
@@ -75,13 +85,14 @@ namespace RentCarSystem.Application.Services
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
                 .Include(r => r.PickupLocation)
                 .Include(r => r.ReturnLocation)
                 .Where(r => r.Status == ReservationStatus.Active &&
                            r.PickupDate <= now && r.ReturnDate >= now)
                 .ToListAsync();
 
-            return _mapper.Map<List<ReservationDTO>>(reservations); 
+            return _mapper.Map<List<ReservationDTO>>(reservations);
         }
 
         public async Task<List<ReservationDTO>> GetPendingReservationsAsync()
@@ -89,12 +100,13 @@ namespace RentCarSystem.Application.Services
             var reservations = await _context.Reservations
                 .Include(r => r.User)
                 .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
                 .Include(r => r.PickupLocation)
                 .Include(r => r.ReturnLocation)
                 .Where(r => r.Status == ReservationStatus.Pending)
                 .ToListAsync();
 
-            return _mapper.Map<List<ReservationDTO>>(reservations);  
+            return _mapper.Map<List<ReservationDTO>>(reservations);
         }
 
         public async Task<ReservationDTO> CreateReservationAsync(CreateReservationDTO dto)
@@ -115,6 +127,7 @@ namespace RentCarSystem.Application.Services
 
             var reservation = new Reservation
             {
+                PublicId = Guid.NewGuid(),
                 UserId = dto.UserId ?? 1,
                 VehicleId = dto.VehicleId,
                 PickupDate = dto.StartDate,
@@ -138,12 +151,16 @@ namespace RentCarSystem.Application.Services
                 HasBabySeat = false,
                 HasGPS = false,
                 HasAdditionalDriver = false,
-                Status = ReservationStatus.Pending
+                Status = ReservationStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "System"
             };
 
             _context.Reservations.Add(reservation);
             vehicle.Status = VehicleStatus.Rented;
             await _context.SaveChangesAsync();
+
+            Log.Information("Reservation created: {PublicId}", reservation.PublicId);
 
             return await GetReservationByIdAsync(reservation.Id)
                 ?? throw new Exception("Reservation creation failed");
@@ -171,7 +188,12 @@ namespace RentCarSystem.Application.Services
                                         reservation.DiscountAmount;
             }
 
+            reservation.UpdatedAt = DateTime.UtcNow;
+            reservation.UpdatedBy = "System";
+
             await _context.SaveChangesAsync();
+
+            Log.Information("Reservation updated: {Id}, PublicId: {PublicId}", reservation.Id, reservation.PublicId);
 
             return await GetReservationByIdAsync(reservation.Id)
                 ?? throw new Exception("Reservation update failed");
@@ -189,9 +211,18 @@ namespace RentCarSystem.Application.Services
             reservation.Status = ReservationStatus.Cancelled;
             reservation.CancellationReason = reason;
             reservation.CancellationDate = DateTime.UtcNow;
-            reservation.Vehicle.Status = VehicleStatus.Available;
+            reservation.UpdatedAt = DateTime.UtcNow;
+            reservation.UpdatedBy = "System";
+
+            if (reservation.Vehicle != null)
+            {
+                reservation.Vehicle.Status = VehicleStatus.Available;
+            }
 
             await _context.SaveChangesAsync();
+
+            Log.Information("Reservation cancelled: {Id}, PublicId: {PublicId}, Reason: {Reason}",
+                reservation.Id, reservation.PublicId, reason);
 
             return true;
         }
@@ -206,9 +237,18 @@ namespace RentCarSystem.Application.Services
                 return false;
 
             reservation.Status = ReservationStatus.Completed;
-            reservation.Vehicle.Status = VehicleStatus.Available;
+            reservation.UpdatedAt = DateTime.UtcNow;
+            reservation.UpdatedBy = "System";
+
+            if (reservation.Vehicle != null)
+            {
+                reservation.Vehicle.Status = VehicleStatus.Available;
+            }
 
             await _context.SaveChangesAsync();
+
+            Log.Information("Reservation completed: {Id}, PublicId: {PublicId}",
+                reservation.Id, reservation.PublicId);
 
             return true;
         }
@@ -222,6 +262,126 @@ namespace RentCarSystem.Application.Services
 
             _context.Reservations.Remove(reservation);
             await _context.SaveChangesAsync();
+
+            Log.Information("Reservation deleted: {Id}", id);
+
+            return true;
+        }
+
+        // ========== GUID PUBLICID İLE METODLAR (YENİ - EKLENDİ!) ==========
+
+        public async Task<ReservationDTO?> GetReservationByPublicIdAsync(Guid publicId)
+        {
+            var reservation = await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Vehicle)
+                    .ThenInclude(v => v.Brand)
+                .Include(r => r.PickupLocation)
+                .Include(r => r.ReturnLocation)
+                .FirstOrDefaultAsync(r => r.PublicId == publicId);
+
+            return _mapper.Map<ReservationDTO>(reservation);
+        }
+
+        public async Task<ReservationDTO> UpdateReservationByPublicIdAsync(Guid publicId, UpdateReservationDTO dto)
+        {
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(r => r.PublicId == publicId);
+
+            if (reservation == null)
+                throw new Exception($"Reservation with PublicId {publicId} not found");
+
+            if (dto.Status.HasValue)
+                reservation.Status = (ReservationStatus)dto.Status.Value;
+
+            if (dto.ExtraCharges.HasValue)
+            {
+                reservation.ExtraServicesFee = dto.ExtraCharges.Value;
+                reservation.TotalPrice = reservation.BasePrice +
+                                        reservation.ExtraServicesFee +
+                                        reservation.InsuranceFee +
+                                        reservation.ExtraKilometerFee +
+                                        reservation.FuelDifferenceFee +
+                                        reservation.LateFee -
+                                        reservation.DiscountAmount;
+            }
+
+            reservation.UpdatedAt = DateTime.UtcNow;
+            reservation.UpdatedBy = "System";
+
+            await _context.SaveChangesAsync();
+
+            Log.Information("Reservation updated by PublicId: {PublicId}", publicId);
+
+            return await GetReservationByPublicIdAsync(publicId)
+                ?? throw new Exception("Reservation update failed");
+        }
+
+        public async Task<bool> CancelReservationByPublicIdAsync(Guid publicId, string reason)
+        {
+            var reservation = await _context.Reservations
+                .Include(r => r.Vehicle)
+                .FirstOrDefaultAsync(r => r.PublicId == publicId);
+
+            if (reservation == null)
+                return false;
+
+            reservation.Status = ReservationStatus.Cancelled;
+            reservation.CancellationReason = reason;
+            reservation.CancellationDate = DateTime.UtcNow;
+            reservation.UpdatedAt = DateTime.UtcNow;
+            reservation.UpdatedBy = "System";
+
+            if (reservation.Vehicle != null)
+            {
+                reservation.Vehicle.Status = VehicleStatus.Available;
+            }
+
+            await _context.SaveChangesAsync();
+
+            Log.Information("Reservation cancelled by PublicId: {PublicId}, Reason: {Reason}",
+                publicId, reason);
+
+            return true;
+        }
+
+        public async Task<bool> CompleteReservationByPublicIdAsync(Guid publicId)
+        {
+            var reservation = await _context.Reservations
+                .Include(r => r.Vehicle)
+                .FirstOrDefaultAsync(r => r.PublicId == publicId);
+
+            if (reservation == null)
+                return false;
+
+            reservation.Status = ReservationStatus.Completed;
+            reservation.UpdatedAt = DateTime.UtcNow;
+            reservation.UpdatedBy = "System";
+
+            if (reservation.Vehicle != null)
+            {
+                reservation.Vehicle.Status = VehicleStatus.Available;
+            }
+
+            await _context.SaveChangesAsync();
+
+            Log.Information("Reservation completed by PublicId: {PublicId}", publicId);
+
+            return true;
+        }
+
+        public async Task<bool> DeleteReservationByPublicIdAsync(Guid publicId)
+        {
+            var reservation = await _context.Reservations
+                .FirstOrDefaultAsync(r => r.PublicId == publicId);
+
+            if (reservation == null)
+                return false;
+
+            _context.Reservations.Remove(reservation);
+            await _context.SaveChangesAsync();
+
+            Log.Information("Reservation deleted by PublicId: {PublicId}", publicId);
 
             return true;
         }

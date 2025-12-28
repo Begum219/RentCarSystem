@@ -17,6 +17,12 @@ namespace RentCarSystem.Application.Common.Interfaces
         Task<ReservationDTO> UpdateReservationAsync(int id, UpdateReservationDTO dto);
         Task<bool> CancelReservationAsync(int id, string reason);
         Task<bool> CompleteReservationAsync(int id);
-        Task<bool> DeleteReservationAsync(int id);  
+        Task<bool> DeleteReservationAsync(int id);
+        Task<ReservationDTO?> GetReservationByPublicIdAsync(Guid publicId);
+        Task<ReservationDTO> UpdateReservationByPublicIdAsync(Guid publicId, UpdateReservationDTO dto);
+        Task<bool> CancelReservationByPublicIdAsync(Guid publicId, string reason);
+        Task<bool> CompleteReservationByPublicIdAsync(Guid publicId);
+        Task<bool> DeleteReservationByPublicIdAsync(Guid publicId);
+
     }
 }

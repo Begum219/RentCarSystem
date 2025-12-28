@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: rentcar-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - rentcar-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: rentcar-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - rentcar-network
+
+  # ✅ DOĞRU APM SERVER KONFIGÜRASYONU
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.11.0
+    container_name: rentcar-apm-server
+    ports:
+      - "8200:8200"
+    command: >
+      apm-server -e
+        -E apm-server.host=0.0.0.0:8200
+        -E output.elasticsearch.hosts=["http://elasticsearch:9200"]
+        -E setup.kibana.host=http://kibana:5601
+    depends_on:
+      - elasticsearch
+      - kibana
+    networks:
+      - rentcar-network
+
+volumes:
+  elasticsearch_data:
+
+networks:
+  rentcar-network:
+    driver: bridge

@@ -2,17 +2,17 @@
 {
     public class ReservationDTO
     {
-        public int Id { get; set; }
+        public Guid PublicId { get; set; }
 
         // User bilgileri
         public int UserId { get; set; }
         public string UserFullName { get; set; } = string.Empty;
-        public string UserEmail { get; set; } = string.Empty;  // ✅ Ekle
+        public string UserEmail { get; set; } = string.Empty;  
 
         // Vehicle bilgileri
         public int VehicleId { get; set; }
         public string VehicleModel { get; set; } = string.Empty;
-        public string VehiclePlate { get; set; } = string.Empty;  // ✅ Ekle
+        public string VehiclePlate { get; set; } = string.Empty;  
 
         // Tarihler
         public DateTime StartDate { get; set; }

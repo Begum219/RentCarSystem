@@ -5,6 +5,8 @@ namespace RentCarSystem.Domain.Entities
     public class DamageReport : BaseAuditableEntity
     {
         public int ReservationId { get; set; }
+       
+
         public int RentalAgreementId { get; set; }
         public DateTime ReportDate { get; set; }
         public string Description { get; set; } = string.Empty;

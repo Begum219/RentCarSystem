@@ -2,7 +2,7 @@
 {
     public class PaymentDTO
     {
-        public int Id { get; set; }
+        public Guid PublicId { get; set; }
 
         // Reservation bilgileri
         public int ReservationId { get; set; }

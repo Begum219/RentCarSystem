@@ -10,6 +10,7 @@ namespace RentCarSystem.Domain.Entities
         public int VehicleId { get; set; }
         public int PickupLocationId { get; set; }
         public int ReturnLocationId { get; set; }
+        public Guid PublicId { get; set; } = Guid.NewGuid();
 
         // Tarih ve Saat
         public DateTime PickupDate { get; set; }
@@ -42,6 +43,7 @@ namespace RentCarSystem.Domain.Entities
 
         // Durum
         public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+
         public string? CancellationReason { get; set; }
         public DateTime? CancellationDate { get; set; }
 
